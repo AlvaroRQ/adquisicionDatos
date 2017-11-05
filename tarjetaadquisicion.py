@@ -144,6 +144,8 @@ class TarjetaAdquisicion():
 			#	escritor.writerow(['Spam'] * 5 + ['Baked Beans'])
 				writer.writerow(info)
 
+				
+
 	def centralizarInformacion(self):
 		contadorDeActualizacion = 0
 		while self.miFila.qsize()>0:
