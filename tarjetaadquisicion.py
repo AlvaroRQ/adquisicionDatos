@@ -31,6 +31,7 @@ class TarjetaAdquisicion():
 		self.temperatura = []
 		self.rpm = []
 		self.estado = 0
+		self.informacionIngresada = []
 
 		"""
 			estado = 0, inicial
@@ -46,6 +47,8 @@ class TarjetaAdquisicion():
 		self.corriente = []
 		self.temperatura = []
 		self.rpm = []
+		del self.miListaInformacion 
+		self.miListaInformacion = []
 
 	def iniciarTransmision(self):
 		#print('Iniciando transmisión')
@@ -81,7 +84,10 @@ class TarjetaAdquisicion():
 
 	def __finalizarRecepcionDeInformacion(self,informacionRecibidaAGuardar):
 		self.finalizarTransmision()
-		self.convertirACSV(informacionRecibidaAGuardar,'datos Recibidos')
+		#self.convertirACSV(informacionRecibidaAGuardar,'datos Recibidos')
+
+	def exportarDatosACSV(self):
+		self.convertirACSV(self.miListaInformacion,self.informacionIngresada[0])
 
 	def detenerInformacion(self):
 		#print('finalizando con comando')
@@ -137,6 +143,8 @@ class TarjetaAdquisicion():
 		nombreStandar = name.replace(' ','_')+'.csv'
 		with open(nombreStandar, 'w', newline='') as csvfile:
 			#escritor = csv.writer(csvfile, delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL)
+			for informa in self.informacionIngresada:
+				csvfile.write("#"+informa+"\n")
 			fieldnames = ['Tiempo','Voltaje','Corriente','Temperatura','RPM']
 			writer = csv.DictWriter(csvfile, delimiter=';',quotechar='|',fieldnames=fieldnames)
 			writer.writeheader()
@@ -144,7 +152,16 @@ class TarjetaAdquisicion():
 			#	escritor.writerow(['Spam'] * 5 + ['Baked Beans'])
 				writer.writerow(info)
 
-				
+	def actualizarCampos(self,campos):
+		self.informacionIngresada = campos
+		#print('Actualizado campos a ',self.informacionIngresada)
+		tenemosInformacionParaExportar = False
+		# Si hay informacion valiosa se retorna true
+		if len(self.miListaInformacion)>1:
+			tenemosInformacionParaExportar = True
+		else:
+			tenemosInformacionParaExportar = False
+		return tenemosInformacionParaExportar
 
 	def centralizarInformacion(self):
 		contadorDeActualizacion = 0
@@ -155,14 +172,18 @@ class TarjetaAdquisicion():
 	
 	def generarListas(self):
 		estado = -1
+		self.tiempo = []
+		self.voltaje = []
+		self.corriente = []
+		self.temperatura = []
+		self.rpm = []
 		for info in self.miListaInformacion:
 			self.tiempo.append(info['Tiempo'])
 			self.voltaje.append(info['Voltaje'])
 			self.corriente.append(info['Corriente'])
 			self.temperatura.append(info['Temperatura'])
 			self.rpm.append(info['RPM'])
-		del self.miListaInformacion 
-		self.miListaInformacion = []
+		## Aqui borraba
 		longitudt = len(self.tiempo)
 		longitudV = len(self.voltaje)
 		longitudC = len(self.corriente)
@@ -179,7 +200,6 @@ class TarjetaAdquisicion():
 
 	def obtenerDatosDeCSV(self,fileName,columna):
 		pass
-
 
 if __name__ == '__main__':
 	misDiccionariosDePrueva = []

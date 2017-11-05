@@ -4,7 +4,7 @@ import serial
 import random
 import threading
 from PyQt4 import QtGui
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as graficaActual
 from multiprocessing import Queue
 from matplotlib.figure import Figure
 from tarjetaadquisicion import TarjetaAdquisicion
@@ -52,19 +52,21 @@ class Example(QtGui.QWidget):
         ## CONTROL EJECUCIÓN
 
         self.botonDeInicio = QtGui.QPushButton("Importar Datos")
-        self.cancelButton = QtGui.QPushButton("Detener")
+        self.botonDeCancel = QtGui.QPushButton("Detener")
         self.botonDeInicializacion = QtGui.QPushButton("Descartar Prueba")
-        self.botonParaPDF = QtGui.QPushButton("Crear PDF")
+        self.botonParaPDF = QtGui.QPushButton("Exportar Info")
         #self.botonParaPDF.setStyleSheet("background-color: green")
-        #self.botonParaPDF.setEnabled(False)
+        self.botonDeInicializacion.setEnabled(False)
+        self.botonParaPDF.setEnabled(False)
+        self.botonDeCancel.setEnabled(False)
         self.botonDeInicio.resize(100,100)
-        self.cancelButton.resize(100,100)
+        self.botonDeCancel.resize(100,100)
         self.botonDeInicio.setMinimumHeight(80)
-        self.cancelButton.setMinimumHeight(80)
+        self.botonDeCancel.setMinimumHeight(80)
 
         self.barraControlPrograma = QtGui.QHBoxLayout()
         self.barraControlPrograma.addWidget(self.botonDeInicio)
-        self.barraControlPrograma.addWidget(self.cancelButton)
+        self.barraControlPrograma.addWidget(self.botonDeCancel)
 
         self.barraControlPostPrograma = QtGui.QHBoxLayout()
         self.barraControlPostPrograma.addWidget(self.botonDeInicializacion)
@@ -72,13 +74,13 @@ class Example(QtGui.QWidget):
 
         ## Control de Botones
         self.botonDeInicio.clicked.connect(self.importarDatos)
-        self.cancelButton.clicked.connect(self.detenerDatos)
+        self.botonDeCancel.clicked.connect(self.detenerDatos)
         self.botonDeInicializacion.clicked.connect(self.inicializarTodo)
-        self.botonParaPDF.clicked.connect(self.crearPDF)
+        self.botonParaPDF.clicked.connect(self.exportarInformacion)
 
         # a figure instance to plot on
         #self.figure = Figure()
-        self.figure = plt.figure(figsize = (15,5))
+        self.figure = graficaActual.figure(figsize = (15,5))
 
         # this is the Canvas Widget that displays the `figure`
         # it takes the `figure` instance as a parameter to __init__
@@ -117,6 +119,18 @@ class Example(QtGui.QWidget):
         self.barraControlGrafica.addWidget(self.miLegendaVS)
         self.barraControlGrafica.addWidget(self.seleccionDeAbsisa)
 
+        ## SECCION COMENTARIOS:
+        self.miTituloComentarios = QtGui.QLabel('Comentarios:')
+        self.miComentario = QtGui.QTextEdit()
+        self.miComentario.setMinimumHeight(100)
+
+        ## Adquisicion de datos:
+        self.miDataMotor.editingFinished.connect(self.actualizarIngresoDatos)
+        self.miDatoPotenciaPlaca.editingFinished.connect(self.actualizarIngresoDatos)
+        self.miDataTensionNominal.editingFinished.connect(self.actualizarIngresoDatos)
+        self.miDataVelocidadNominal.editingFinished.connect(self.actualizarIngresoDatos)
+        #self.miComentario.textChanged.connect(self.actualizarIngresoDatos)
+
         ## GRAFICA IZQUIERDA
 
         capaVerticalAuxiliar = QtGui.QVBoxLayout()
@@ -127,6 +141,8 @@ class Example(QtGui.QWidget):
         capaVerticalAuxiliar.addLayout(self.parametrosDePlaca3)
         capaVerticalAuxiliar.addWidget(self.miTituloControlGrafica)
         capaVerticalAuxiliar.addLayout(self.barraControlGrafica)
+        capaVerticalAuxiliar.addWidget(self.miTituloComentarios)
+        capaVerticalAuxiliar.addWidget(self.miComentario)
         capaVerticalAuxiliar.addStretch(1)
         capaVerticalAuxiliar.addLayout(self.barraControlPostPrograma)
         capaVerticalAuxiliar.addLayout(self.barraControlPrograma)
@@ -148,6 +164,19 @@ class Example(QtGui.QWidget):
         self.setWindowTitle('Adquisición de datos de Motor DC')    
         self.show()
 
+    def actualizarIngresoDatos(self):
+        campos = [self.miDataMotor.text(),
+                    self.miDatoPotenciaPlaca.text(),
+                    self.miDataTensionNominal.text(),
+                    self.miDataVelocidadNominal.text(),
+                    self.miComentario.toPlainText()]
+        if(self.miTarjetaAdquisicion.actualizarCampos(campos)):
+            self.botonParaPDF.setEnabled(True)
+            self.botonDeInicializacion.setEnabled(True)
+        else:
+            self.botonParaPDF.setEnabled(False)
+            self.botonDeInicializacion.setEnabled(False)
+
     def actualizarOrdenada(self,text):
         self.refrescarGrafica(self.seleccionDeOrdenada.currentText(),self.seleccionDeAbsisa.currentText(),self.miTarjetaAdquisicion.obtenerUltimosDatos())
 
@@ -155,71 +184,75 @@ class Example(QtGui.QWidget):
         self.refrescarGrafica(self.seleccionDeOrdenada.currentText(),self.seleccionDeAbsisa.currentText(),self.miTarjetaAdquisicion.obtenerUltimosDatos())
 
     def importarDatos(self):
-        self.botonDeInicio.setText("Importando Datos")
         self.estadoAuxiliar = True
         self.miTarjetaAdquisicion.recibirInformacion()
-        self.botonDeInicio.setText("Importar Datos*")
-        self.botonDeInicio.setStyleSheet("background-color: red")
+        self.botonDeCancel.setEnabled(True)
+        self.botonDeInicio.setEnabled(False)
         self.miTareaGraficaParalela = threading.Thread(target=self.actualizacionAutomaticaGrafica, args=("task",))
         self.miTareaGraficaParalela.start()
 
     def inicializarTodo(self):
+        # Se hace un refresco previo para borrar los valores que puedan estar en etapa intermedia
+        self.refrescarGrafica('Todos','Tiempo',self.miTarjetaAdquisicion.actualizarDatos())
         self.miTarjetaAdquisicion.inicializar()
         self.refrescarGrafica('Todos','Tiempo',self.miTarjetaAdquisicion.actualizarDatos())
+        self.actualizarIngresoDatos()
 
-    def crearPDF(self):
-        pass
+    def exportarInformacion(self):
+        self.miTarjetaAdquisicion.exportarDatosACSV()
 
     def detenerDatos(self):
         self.estadoAuxiliar = False
         self.miTarjetaAdquisicion.detenerInformacion()
         self.botonDeInicio.setText("Importar Datos")
-        self.botonDeInicio.setStyleSheet("background-color: gray")
+        self.botonDeCancel.setEnabled(False)
+        self.botonDeInicio.setEnabled(True)
         self.miTareaGraficaParalela.do_run = False
         self.miTareaGraficaParalela.join()
+        self.actualizarIngresoDatos()
 
     def actualizacionAutomaticaGrafica(self,argumento):
         self.miTareaGraficaParalela = threading.currentThread()
         while getattr(self.miTareaGraficaParalela, "do_run", True):
-            self.refrescarGrafica('Todos','Tiempo',self.miTarjetaAdquisicion.actualizarDatos())
+            self.refrescarGrafica(self.seleccionDeOrdenada.currentText(),self.seleccionDeAbsisa.currentText(),self.miTarjetaAdquisicion.actualizarDatos())
             #print(len(self.miTarjetaAdquisicion.actualizarDatos()[0]))
         #print('Finalizando grafica desde adentro')
 
     def refrescarGrafica(self,argumentoOrdenada,argumentoAbsisa,listaDatos):
         titulo = self.miDataMotor.text()
         if argumentoOrdenada == 'Todos':
-            plt.cla()
+            graficaActual.cla()
             ax1 = self.figure.add_subplot(111)
             t = listaDatos[0]#range(len(listaDatos[0]))
             v = listaDatos[1]
             c = listaDatos[2]
             T = listaDatos[3]
             r = listaDatos[4]
-            plt.title(self.tituloDeGrafica)
-            plt.ylabel('$[V] [A] [C] [rpm]$')
-            plt.xlabel('$t [s]$')
-            plt.grid()
-            plt.plot(t,v,label='v')
-            plt.plot(t,c,label='i')
-            plt.plot(t,T,label='T')
-            plt.plot(t,r,label='rpm')
-            #plt.plot(t,v,'b.-',label='v',t,c,'y.-',label='i',t,T,'r.-',label='T',t,r,'g.-',label='rpm')
-            plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),ncol=4, fancybox=True, shadow=True)
-            plt.savefig(titulo+'.pdf', bbox_inches='tight')
+            graficaActual.title(self.tituloDeGrafica)
+            graficaActual.ylabel('$[V] [A] [C] [rpm]$')
+            graficaActual.xlabel('$t [s]$')
+            graficaActual.grid()
+            graficaActual.plot(t,v,label='v')
+            graficaActual.plot(t,c,label='i')
+            graficaActual.plot(t,T,label='T')
+            graficaActual.plot(t,r,label='rpm')
+            #graficaActual.plot(t,v,'b.-',label='v',t,c,'y.-',label='i',t,T,'r.-',label='T',t,r,'g.-',label='rpm')
+            graficaActual.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),ncol=4, fancybox=True, shadow=True)
+            #graficaActual.savefig(titulo+'.pdf', bbox_inches='tight')
             self.canvas.draw()
-            plt.gcf().clear()
+            graficaActual.gcf().clear()
         else:
-            plt.cla()
+            graficaActual.cla()
             ax1 = self.figure.add_subplot(111)
             a = listaDatos[self.indices[argumentoAbsisa][0]]
             o = listaDatos[self.indices[argumentoOrdenada][0]]
             titulo += '_'+argumentoOrdenada +'_vs_'+ argumentoAbsisa
-            plt.title(titulo)
-            plt.xlabel(self.indices[argumentoAbsisa][1])
-            plt.ylabel(self.indices[argumentoOrdenada][1])
-            plt.grid()
-            plt.plot(a,o)
-            plt.savefig(titulo+'.pdf', bbox_inches='tight')
+            graficaActual.title(titulo)
+            graficaActual.xlabel(self.indices[argumentoAbsisa][1])
+            graficaActual.ylabel(self.indices[argumentoOrdenada][1])
+            graficaActual.grid()
+            graficaActual.plot(a,o)
+            #graficaActual.savefig(titulo+'.pdf', bbox_inches='tight')
             self.canvas.draw()
         
 def main():
