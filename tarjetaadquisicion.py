@@ -15,10 +15,11 @@ class TarjetaAdquisicion():
 		self.miPuerto.baudrate = baudrate
 		self.miPuerto.timeout = 10
 		self.miPuerto.port = self.miNombrePuerto
+		self.miPuerto.open()
 		self.miPuerto.setDTR(False)
 		self.miPuerto.dtr = False
 		time.sleep(0.5)
-		self.miPuerto.open()
+		#self.miPuerto.open()
 		#miPuerto = serial.Serial('/dev/ttyUSB0',57600,timeout=10)
 		self.caracterDeInicio = 'I'
 		self.caracterDeFinalizacion = 'T'
