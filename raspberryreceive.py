@@ -15,7 +15,7 @@ class Example(QtGui.QWidget):
     
     def __init__(self):
         super(Example, self).__init__()
-        self.tituloDeGrafica = 'Todos'
+        self.titulo = 'Toda Informacion'
         self.ejeX = 'Todos'
         self.ejeY = 'Tiempo'
         self.miFilaAuxiliar = Queue()
@@ -200,6 +200,7 @@ class Example(QtGui.QWidget):
 
     def exportarInformacion(self):
         self.miTarjetaAdquisicion.exportarDatosACSV()
+        self.refrescarGrafica(self.seleccionDeOrdenada.currentText(),self.seleccionDeAbsisa.currentText(),self.miTarjetaAdquisicion.actualizarDatos(),True)
 
     def detenerDatos(self):
         self.estadoAuxiliar = False
@@ -218,8 +219,8 @@ class Example(QtGui.QWidget):
             #print(len(self.miTarjetaAdquisicion.actualizarDatos()[0]))
         #print('Finalizando grafica desde adentro')
 
-    def refrescarGrafica(self,argumentoOrdenada,argumentoAbsisa,listaDatos):
-        titulo = self.miDataMotor.text()
+    def refrescarGrafica(self,argumentoOrdenada,argumentoAbsisa,listaDatos,guardarEnPDF = False):
+        self.titulo = self.miDataMotor.text()
         if argumentoOrdenada == 'Todos':
             graficaActual.cla()
             ax1 = self.figure.add_subplot(111)
@@ -228,7 +229,7 @@ class Example(QtGui.QWidget):
             c = listaDatos[2]
             T = listaDatos[3]
             r = listaDatos[4]
-            graficaActual.title(self.tituloDeGrafica)
+            graficaActual.title(self.titulo)
             graficaActual.ylabel('$[V] [A] [C] [rpm]$')
             graficaActual.xlabel('$t [s]$')
             graficaActual.grid()
@@ -238,7 +239,8 @@ class Example(QtGui.QWidget):
             graficaActual.plot(t,r,label='rpm')
             #graficaActual.plot(t,v,'b.-',label='v',t,c,'y.-',label='i',t,T,'r.-',label='T',t,r,'g.-',label='rpm')
             graficaActual.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),ncol=4, fancybox=True, shadow=True)
-            #graficaActual.savefig(titulo+'.pdf', bbox_inches='tight')
+            if guardarEnPDF:
+                graficaActual.savefig(self.titulo+'.pdf', bbox_inches='tight')
             self.canvas.draw()
             graficaActual.gcf().clear()
         else:
@@ -246,13 +248,14 @@ class Example(QtGui.QWidget):
             ax1 = self.figure.add_subplot(111)
             a = listaDatos[self.indices[argumentoAbsisa][0]]
             o = listaDatos[self.indices[argumentoOrdenada][0]]
-            titulo += '_'+argumentoOrdenada +'_vs_'+ argumentoAbsisa
-            graficaActual.title(titulo)
+            self.titulo += '_'+argumentoOrdenada +'_vs_'+ argumentoAbsisa
+            graficaActual.title(self.titulo)
             graficaActual.xlabel(self.indices[argumentoAbsisa][1])
             graficaActual.ylabel(self.indices[argumentoOrdenada][1])
             graficaActual.grid()
             graficaActual.plot(a,o)
-            #graficaActual.savefig(titulo+'.pdf', bbox_inches='tight')
+            if guardarEnPDF:
+                graficaActual.savefig(self.titulo+'.pdf', bbox_inches='tight')
             self.canvas.draw()
         
 def main():
