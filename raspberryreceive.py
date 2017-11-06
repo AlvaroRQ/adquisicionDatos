@@ -50,6 +50,12 @@ class Example(QtGui.QWidget):
         self.parametrosDePlaca3.addWidget(self.miVelocidadNominal)
         self.parametrosDePlaca3.addWidget(self.miDataVelocidadNominal)
 
+        # MENU SUPERIOS
+        extractAction = QtGui.QAction('&SALIR', self)
+        extractAction.setShortcut('Ctrl+Q')
+        extractAction.setStatusTip('Salir de la aplicacion')
+        extractAction.triggered.connect(self.closeApplication)
+
         ## CONTROL EJECUCIÓN
         self.botonDeInicio = QtGui.QPushButton("Importar Datos")
         self.botonDeCancel = QtGui.QPushButton("Detener")
@@ -144,6 +150,7 @@ class Example(QtGui.QWidget):
             self.miEtiquetaPuerto.setText('No conectado, Conectar a:')
             capaVerticalAuxiliar.addWidget(self.miEtiquetaPuerto)
             capaVerticalAuxiliar.addWidget(self.miIntroduccionPuerto)
+            self.botonDeInicio.setEnabled(False)
         capaVerticalAuxiliar.addWidget(self.miTituloIzquierdo)
         capaVerticalAuxiliar.addLayout(self.parametrosOrganizacionales)
         capaVerticalAuxiliar.addLayout(self.parametrosDePlaca1)
@@ -176,11 +183,20 @@ class Example(QtGui.QWidget):
         self.setWindowIcon(QtGui.QIcon('/pictures/logo.png')) 
         self.show()
 
+    def closeApplication(self):
+        choice = QtGui.QMessageBox.question(self,'Leaving so soon?','Are you sure you want to exit the program?',QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+        if choice == QtGui.QMessageBox.Yes:
+            self.miTarjetaAdquisicion.salir()
+            sys.exit()
+        else:
+            pass
+
     def intentoIntroducirPuerto(self):
         exitoConexion = self.miTarjetaAdquisicion.iniciarPuerto(puerto = '/dev/'+self.miIntroduccionPuerto.text())
         if exitoConexion:
             self.miEtiquetaPuerto.setText('Exito, conectado a '+self.miIntroduccionPuerto.text())
             self.miIntroduccionPuerto.setVisible(False)
+            self.botonDeInicio.setEnabled(True)
         else:
             self.miIntroduccionPuerto.clear()
             self.miEtiquetaPuerto.setText('Vuelve a intentar')
@@ -223,6 +239,7 @@ class Example(QtGui.QWidget):
         self.botonDeInicio.setEnabled(True)
 
     def exportarInformacion(self):
+        self.actualizarIngresoDatos()
         self.miTarjetaAdquisicion.exportarDatosACSV()
         self.refrescarGrafica(self.seleccionDeOrdenada.currentText(),self.seleccionDeAbsisa.currentText(),self.miTarjetaAdquisicion.obtenerUltimosDatos(),True)
 

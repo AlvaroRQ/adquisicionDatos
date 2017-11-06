@@ -179,6 +179,9 @@ class TarjetaAdquisicion():
 			#	escritor.writerow(['Spam'] * 5 + ['Baked Beans'])
 				writer.writerow(info)
 
+	def salir(self):
+		self.miPuerto.close()
+
 	def actualizarCampos(self,campos):
 		self.informacionIngresada = campos
 		#print('Actualizado campos a ',self.informacionIngresada)
