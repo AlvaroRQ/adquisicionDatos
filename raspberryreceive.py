@@ -180,7 +180,7 @@ class Example(QtGui.QWidget):
         
         self.setGeometry(300, 300, 300, 150)
         self.setWindowTitle('Adquisición de datos de Motor DC')   
-        self.setWindowIcon(QtGui.QIcon('/pictures/logo.png')) 
+        self.setWindowIcon(QtGui.QIcon('./pictures/logo.png')) 
         self.show()
 
     def closeApplication(self):
