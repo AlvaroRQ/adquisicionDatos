@@ -148,9 +148,9 @@ class miVentana(QtGui.QWidget):
         capaVerticalAuxiliar = QtGui.QVBoxLayout()
         if not self.puertoConectadoExitoso:
             self.miEtiquetaPuerto.setText('No conectado, Conectar a:')
-            capaVerticalAuxiliar.addWidget(self.miEtiquetaPuerto)
-            capaVerticalAuxiliar.addWidget(self.miIntroduccionPuerto)
             self.botonDeInicio.setEnabled(False)
+        capaVerticalAuxiliar.addWidget(self.miEtiquetaPuerto)
+        capaVerticalAuxiliar.addWidget(self.miIntroduccionPuerto)
         capaVerticalAuxiliar.addWidget(self.miTituloIzquierdo)
         capaVerticalAuxiliar.addLayout(self.parametrosOrganizacionales)
         capaVerticalAuxiliar.addLayout(self.parametrosDePlaca1)
@@ -195,11 +195,11 @@ class miVentana(QtGui.QWidget):
         exitoConexion = self.miTarjetaAdquisicion.iniciarPuerto(puerto = '/dev/'+self.miIntroduccionPuerto.text())
         if exitoConexion:
             self.miEtiquetaPuerto.setText('Exito, conectado a '+self.miIntroduccionPuerto.text())
-            self.miIntroduccionPuerto.setVisible(False)
+            self.miIntroduccionPuerto.clear()#setVisible(False)
             self.botonDeInicio.setEnabled(True)
         else:
+            self.miEtiquetaPuerto.setText('Aun no puedo conectarme a '+self.miIntroduccionPuerto.text())
             self.miIntroduccionPuerto.clear()
-            self.miEtiquetaPuerto.setText('Vuelve a intentar')
 
 
     def actualizarIngresoDatos(self):
