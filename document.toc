@@ -1,3 +1,0 @@
-\select@language {spanish}
-\contentsline {section}{\numberline {1}Company info}{3}{section.1}
-\contentsline {subsection}{\numberline {1.1}Misi\IeC {\'o}n}{3}{subsection.1.1}
