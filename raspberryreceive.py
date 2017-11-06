@@ -20,6 +20,7 @@ class Example(QtGui.QWidget):
         self.ejeY = 'Tiempo'
         self.miFilaAuxiliar = Queue()
         self.miTarjetaAdquisicion = TarjetaAdquisicion(self.miFilaAuxiliar)
+        self.puertoConectadoExitoso = self.miTarjetaAdquisicion.reconociPuerto
         time.sleep(2)
         self.initUI()
         self.estadoAuxiliar = False
@@ -50,7 +51,6 @@ class Example(QtGui.QWidget):
         self.parametrosDePlaca3.addWidget(self.miDataVelocidadNominal)
 
         ## CONTROL EJECUCIÓN
-
         self.botonDeInicio = QtGui.QPushButton("Importar Datos")
         self.botonDeCancel = QtGui.QPushButton("Detener")
         self.botonDeInicializacion = QtGui.QPushButton("Descartar Prueba")
@@ -94,6 +94,7 @@ class Example(QtGui.QWidget):
         self.toolbar = NavigationToolbar(self.canvas, self)
 
         ### CONTROL DE GRAFICA:
+        self.miEtiquetaTiempo = QtGui.QLabel('Inicio: '+self.miTarjetaAdquisicion.horaInicioLiteral)
         self.miTituloControlGrafica = QtGui.QLabel('Graficar:')
         self.miLegendaVS = QtGui.QLabel('vs')
 
@@ -124,21 +125,31 @@ class Example(QtGui.QWidget):
         self.miComentario = QtGui.QTextEdit()
         self.miComentario.setMinimumHeight(100)
 
+        ## Control de puerto
+        self.miEtiquetaPuerto = QtGui.QLabel('Conectar a:')
+        self.miIntroduccionPuerto = QtGui.QLineEdit('ttyAMA0')
+
         ## Adquisicion de datos:
         self.miDataMotor.editingFinished.connect(self.actualizarIngresoDatos)
         self.miDatoPotenciaPlaca.editingFinished.connect(self.actualizarIngresoDatos)
         self.miDataTensionNominal.editingFinished.connect(self.actualizarIngresoDatos)
         self.miDataVelocidadNominal.editingFinished.connect(self.actualizarIngresoDatos)
+        self.miIntroduccionPuerto.returnPressed.connect(self.intentoIntroducirPuerto)
         #self.miComentario.textChanged.connect(self.actualizarIngresoDatos)
 
         ## GRAFICA IZQUIERDA
 
         capaVerticalAuxiliar = QtGui.QVBoxLayout()
+        if not self.puertoConectadoExitoso:
+            self.miEtiquetaPuerto.setText('No conectado, Conectar a:')
+            capaVerticalAuxiliar.addWidget(self.miEtiquetaPuerto)
+            capaVerticalAuxiliar.addWidget(self.miIntroduccionPuerto)
         capaVerticalAuxiliar.addWidget(self.miTituloIzquierdo)
         capaVerticalAuxiliar.addLayout(self.parametrosOrganizacionales)
         capaVerticalAuxiliar.addLayout(self.parametrosDePlaca1)
         capaVerticalAuxiliar.addLayout(self.parametrosDePlaca2)
         capaVerticalAuxiliar.addLayout(self.parametrosDePlaca3)
+        capaVerticalAuxiliar.addWidget(self.miEtiquetaTiempo)
         capaVerticalAuxiliar.addWidget(self.miTituloControlGrafica)
         capaVerticalAuxiliar.addLayout(self.barraControlGrafica)
         capaVerticalAuxiliar.addWidget(self.miTituloComentarios)
@@ -161,8 +172,19 @@ class Example(QtGui.QWidget):
         self.setLayout(layoutHorizontalPrincipal)    
         
         self.setGeometry(300, 300, 300, 150)
-        self.setWindowTitle('Adquisición de datos de Motor DC')    
+        self.setWindowTitle('Adquisición de datos de Motor DC')   
+        self.setWindowIcon(QtGui.QIcon('/pictures/logo.png')) 
         self.show()
+
+    def intentoIntroducirPuerto(self):
+        exitoConexion = self.miTarjetaAdquisicion.iniciarPuerto(puerto = '/dev/'+self.miIntroduccionPuerto.text())
+        if exitoConexion:
+            self.miEtiquetaPuerto.setText('Exito, conectado a '+self.miIntroduccionPuerto.text())
+            self.miIntroduccionPuerto.setVisible(False)
+        else:
+            self.miIntroduccionPuerto.clear()
+            self.miEtiquetaPuerto.setText('Vuelve a intentar')
+
 
     def actualizarIngresoDatos(self):
         campos = [self.miDataMotor.text(),
@@ -186,6 +208,7 @@ class Example(QtGui.QWidget):
     def importarDatos(self):
         self.estadoAuxiliar = True
         self.miTarjetaAdquisicion.recibirInformacion()
+        self.miEtiquetaTiempo.setText('Inicio Grafica: '+self.miTarjetaAdquisicion.horaInicioLiteral)
         self.botonDeCancel.setEnabled(True)
         self.botonDeInicio.setEnabled(False)
         self.miTareaGraficaParalela = threading.Thread(target=self.actualizacionAutomaticaGrafica, args=("task",))
@@ -197,17 +220,17 @@ class Example(QtGui.QWidget):
         self.miTarjetaAdquisicion.inicializar()
         self.refrescarGrafica('Todos','Tiempo',self.miTarjetaAdquisicion.actualizarDatos())
         self.actualizarIngresoDatos()
+        self.botonDeInicio.setEnabled(True)
 
     def exportarInformacion(self):
         self.miTarjetaAdquisicion.exportarDatosACSV()
-        self.refrescarGrafica(self.seleccionDeOrdenada.currentText(),self.seleccionDeAbsisa.currentText(),self.miTarjetaAdquisicion.actualizarDatos(),True)
+        self.refrescarGrafica(self.seleccionDeOrdenada.currentText(),self.seleccionDeAbsisa.currentText(),self.miTarjetaAdquisicion.obtenerUltimosDatos(),True)
 
     def detenerDatos(self):
         self.estadoAuxiliar = False
         self.miTarjetaAdquisicion.detenerInformacion()
         self.botonDeInicio.setText("Importar Datos")
         self.botonDeCancel.setEnabled(False)
-        self.botonDeInicio.setEnabled(True)
         self.miTareaGraficaParalela.do_run = False
         self.miTareaGraficaParalela.join()
         self.actualizarIngresoDatos()
@@ -220,43 +243,52 @@ class Example(QtGui.QWidget):
         #print('Finalizando grafica desde adentro')
 
     def refrescarGrafica(self,argumentoOrdenada,argumentoAbsisa,listaDatos,guardarEnPDF = False):
-        self.titulo = self.miDataMotor.text()
-        if argumentoOrdenada == 'Todos':
-            graficaActual.cla()
-            ax1 = self.figure.add_subplot(111)
-            t = listaDatos[0]#range(len(listaDatos[0]))
-            v = listaDatos[1]
-            c = listaDatos[2]
-            T = listaDatos[3]
-            r = listaDatos[4]
-            graficaActual.title(self.titulo)
-            graficaActual.ylabel('$[V] [A] [C] [rpm]$')
-            graficaActual.xlabel('$t [s]$')
-            graficaActual.grid()
-            graficaActual.plot(t,v,label='v')
-            graficaActual.plot(t,c,label='i')
-            graficaActual.plot(t,T,label='T')
-            graficaActual.plot(t,r,label='rpm')
-            #graficaActual.plot(t,v,'b.-',label='v',t,c,'y.-',label='i',t,T,'r.-',label='T',t,r,'g.-',label='rpm')
-            graficaActual.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),ncol=4, fancybox=True, shadow=True)
-            if guardarEnPDF:
-                graficaActual.savefig(self.titulo+'.pdf', bbox_inches='tight')
-            self.canvas.draw()
-            graficaActual.gcf().clear()
+        if listaDatos == None:
+            #print('Nada que actualizar')
+            pass
         else:
-            graficaActual.cla()
-            ax1 = self.figure.add_subplot(111)
-            a = listaDatos[self.indices[argumentoAbsisa][0]]
-            o = listaDatos[self.indices[argumentoOrdenada][0]]
-            self.titulo += '_'+argumentoOrdenada +'_vs_'+ argumentoAbsisa
-            graficaActual.title(self.titulo)
-            graficaActual.xlabel(self.indices[argumentoAbsisa][1])
-            graficaActual.ylabel(self.indices[argumentoOrdenada][1])
-            graficaActual.grid()
-            graficaActual.plot(a,o)
-            if guardarEnPDF:
-                graficaActual.savefig(self.titulo+'.pdf', bbox_inches='tight')
-            self.canvas.draw()
+            self.titulo = self.miDataMotor.text()
+            if argumentoOrdenada == 'Todos':
+                graficaActual.cla()
+                ax1 = self.figure.add_subplot(111)
+                t = listaDatos[0]#range(len(listaDatos[0]))
+                v = listaDatos[1]
+                c = listaDatos[2]
+                T = listaDatos[3]
+                r = listaDatos[4]
+                graficaActual.title(self.titulo)
+                graficaActual.ylabel('$[V] [A] [C] [rpm]$')
+                graficaActual.xlabel(self.miTarjetaAdquisicion.horaInicioLiteral+'+ $t [s]$')
+                graficaActual.grid()
+                graficaActual.plot(t,v,label='v')
+                graficaActual.plot(t,c,label='i')
+                graficaActual.plot(t,T,label='T')
+                graficaActual.plot(t,r,label='rpm')
+                #graficaActual.plot(t,v,'b.-',label='v',t,c,'y.-',label='i',t,T,'r.-',label='T',t,r,'g.-',label='rpm')
+                graficaActual.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),ncol=4, fancybox=True, shadow=True)
+                if guardarEnPDF:
+                    graficaActual.savefig(self.titulo+'_'+self.miTarjetaAdquisicion.fechaHora+'.pdf', bbox_inches='tight')
+                self.canvas.draw()
+                graficaActual.gcf().clear()
+            else:
+                graficaActual.cla()
+                ax1 = self.figure.add_subplot(111)
+                a = listaDatos[self.indices[argumentoAbsisa][0]]
+                o = listaDatos[self.indices[argumentoOrdenada][0]]
+                self.titulo += '_'+argumentoOrdenada +'_vs_'+ argumentoAbsisa
+                graficaActual.title(self.titulo)
+                if self.indices[argumentoAbsisa][0]==0:
+                    graficaActual.xlabel(self.miTarjetaAdquisicion.horaInicioLiteral+' + '+self.indices[argumentoAbsisa][1])
+                else:
+                    graficaActual.xlabel(self.indices[argumentoAbsisa][1])
+                
+                graficaActual.ylabel(self.indices[argumentoOrdenada][1])
+                graficaActual.grid()
+                graficaActual.plot(a,o)
+                if guardarEnPDF:
+                    graficaActual.savefig(self.titulo+'_'+self.miTarjetaAdquisicion.fechaHora+'.pdf', bbox_inches='tight')
+                self.canvas.draw()
+
         
 def main():
     app = QtGui.QApplication(sys.argv)

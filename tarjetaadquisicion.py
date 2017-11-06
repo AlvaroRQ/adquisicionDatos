@@ -8,20 +8,10 @@ from multiprocessing import Queue
 
 class TarjetaAdquisicion():
 	"""docstring for TarjetaAdquisicion"""
-	def __init__(self,queue = Queue(),baudrate = 57600):
+	def __init__(self,queue = Queue(),baudrate = 57600,puerto = '/dev/ttyAMA0'):
 		self.miFila = queue
-		self.miNombrePuerto = '/dev/ttyAMA0'
-		self.miPuerto = serial.Serial()
-		self.miPuerto.baudrate = baudrate
-		self.miPuerto.parity = serial.PARITY_NONE
-		self.miPuerto.stopbits = serial.STOPBITS_ONE
-		self.miPuerto.bytesize = serial.EIGHTBITS
-		self.miPuerto.timeout = 10
-		self.miPuerto.port = self.miNombrePuerto
-		self.miPuerto.open()
-		self.miPuerto.setDTR(False)
-		self.miPuerto.dtr = False
-		time.sleep(0.5)
+		self.reconociPuerto = False
+		self.reconociPuerto = self.iniciarPuerto(baudrate,puerto)
 		#self.miPuerto.open()
 		#miPuerto = serial.Serial('/dev/ttyUSB0',57600,timeout=10)
 		self.caracterDeInicio = 'I'
@@ -36,13 +26,37 @@ class TarjetaAdquisicion():
 		self.rpm = []
 		self.estado = 0
 		self.informacionIngresada = []
-
+		self.horaInicio = time.time()
+		self.horaInicioLiteral = time.strftime("%H:%M:%S", time.localtime(self.horaInicio))
+		self.fechaHora = time.strftime("%y%m%d_%H:%M:%S", time.localtime(self.horaInicio))
 		"""
 			estado = 0, inicial
 			estado = 1, listo con informacion
 			estado = 2, -
 		"""
 
+	def iniciarPuerto(self,baudrate = 57600, puerto = '/dev/ttyAMA0'):
+		self.miNombrePuerto = puerto
+		print('Conectando a: ',puerto)
+		loLogre = False
+		try:
+			self.miPuerto = serial.Serial()
+			self.miPuerto.baudrate = baudrate
+			self.miPuerto.parity = serial.PARITY_NONE
+			self.miPuerto.stopbits = serial.STOPBITS_ONE
+			self.miPuerto.bytesize = serial.EIGHTBITS
+			self.miPuerto.timeout = 10
+			self.miPuerto.port = self.miNombrePuerto
+			self.miPuerto.open()
+			self.miPuerto.setDTR(False)
+			self.miPuerto.dtr = False
+			time.sleep(0.5)
+			loLogre = True
+		except Exception as e:
+			print('No logre comunicarme con el puerto por ',e)
+			loLogre = False
+		return loLogre
+		
 	def inicializar(self):
 		self.timeout = 20				# 10 segundos
 		self.miListaInformacion = []
@@ -77,6 +91,9 @@ class TarjetaAdquisicion():
 		self.iniciarTransmision()
 		self.miTareaParalela = threading.Thread(target=self.recepcionParalela, args=("task",))
 		self.miTareaParalela.start()
+		self.horaInicio = time.time()
+		self.horaInicioLiteral = time.strftime("%H:%M:%S", time.localtime(self.horaInicio))
+		self.fechaHora = time.strftime("%y%m%d_%H:%M:%S", time.localtime(self.horaInicio))
 		
 	def recepcionParalela(self,argumentoOpcional = ''):
 		miInformacion = []
@@ -99,10 +116,15 @@ class TarjetaAdquisicion():
 		self.miTareaParalela.join()
 
 	def actualizarDatos(self):
-		self.centralizarInformacion()
-		self.generarListas()
+		""" Retorna una tupla con los datos, de no existir cambio los retorna None"""
+		incremente = self.incrementarInformacionDesdeMultiFila()
+		if incremente:
+			self.generarListas()
+			datosAretornar = (self.tiempo,self.voltaje,self.corriente,self.temperatura,self.rpm)
 		#print('Genere despues paso:',)
-		return (self.tiempo,self.voltaje,self.corriente,self.temperatura,self.rpm)
+		else:
+			datosAretornar = None
+		return datosAretornar
 
 	def obtenerUltimosDatos(self):
 		return (self.tiempo,self.voltaje,self.corriente,self.temperatura,self.rpm)
@@ -130,7 +152,7 @@ class TarjetaAdquisicion():
 				break
 		miInformacion = miInformacion[1:-1]
 		miInformacionIntermedia = miInformacion.split(',')
-		miDiccionario = {'Tiempo':time.time()}
+		miDiccionario = {'Tiempo':time.time()-self.horaInicio}
 		for data in miInformacionIntermedia:
 			if data[0]=='v':
 				miDiccionario['Voltaje'] = float(data[1:])
@@ -144,9 +166,10 @@ class TarjetaAdquisicion():
 		return miDiccionario
 
 	def convertirACSV(self,miInformacion,name):
-		nombreStandar = name.replace(' ','_')+'.csv'
+		nombreStandar = name.replace(' ','_')+'_'+self.fechaHora+'.csv'
 		with open(nombreStandar, 'w', newline='') as csvfile:
 			#escritor = csv.writer(csvfile, delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL)
+			self.informacionIngresada.append(self.horaInicioLiteral)
 			for informa in self.informacionIngresada:
 				csvfile.write("#"+informa+"\n")
 			fieldnames = ['Tiempo','Voltaje','Corriente','Temperatura','RPM']
@@ -167,11 +190,14 @@ class TarjetaAdquisicion():
 			tenemosInformacionParaExportar = False
 		return tenemosInformacionParaExportar
 
-	def centralizarInformacion(self):
+	def incrementarInformacionDesdeMultiFila(self):
+		incrementeInformacion = False
 		contadorDeActualizacion = 0
 		while self.miFila.qsize()>0:
 			self.miListaInformacion.append(self.miFila.get())
+			incrementeInformacion = True
 			contadorDeActualizacion += 1
+		return incrementeInformacion
 		#print('En un paso di: ',contadorDeActualizacion)
 	
 	def generarListas(self):
@@ -221,7 +247,7 @@ if __name__ == '__main__':
 	tiempo = time.time()
 	while True:
 		print('En fila: ',miFilaExterna.qsize())
-		miData.centralizarInformacion()
+		miData.incrementarInformacionDesdeMultiFila()
 		print('En lista: ',len(miData.miListaInformacion))
 		time.sleep(0.2)
 		if (time.time()-tiempo)>6:
