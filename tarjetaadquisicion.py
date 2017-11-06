@@ -1,6 +1,5 @@
 import sys
 import csv
-import glob
 import time
 import serial
 import threading
@@ -77,9 +76,7 @@ class TarjetaAdquisicion():
 		self.miPuerto.write(self.caracterDeFinalizacion.encode())
 
 	def obtenerPuertosDisponibles(self):
-		puertosUSB = glob.glob('/dev/ttyUSB*')
-		puertosACM = glob.glob('/dev/ttyACM*')
-		return puertosUSB + puertosACM
+		return None
 
 	def establecerPuerto(nombreDePuerto):
 		if nombreDePuerto in self.obtenerPuertosDisponibles():
