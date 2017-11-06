@@ -10,7 +10,7 @@ class TarjetaAdquisicion():
 	"""docstring for TarjetaAdquisicion"""
 	def __init__(self,queue = Queue(),baudrate = 57600):
 		self.miFila = queue
-		self.miNombrePuerto = '/dev/ttyUSB0'
+		self.miNombrePuerto = '/dev/ttyAMA0'
 		self.miPuerto = serial.Serial()
 		self.miPuerto.baudrate = baudrate
 		self.miPuerto.timeout = 10
