@@ -11,7 +11,7 @@ from tarjetaadquisicion import TarjetaAdquisicion
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 
-class miVentana(QtGui.QWidget):
+class miVentana(QtGui.QMainWindow):
     
     def __init__(self):
         super(miVentana, self).__init__()
