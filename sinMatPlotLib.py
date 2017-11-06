@@ -4,12 +4,12 @@ import serial
 import random
 import threading
 from PyQt4 import QtGui
+#import matplotlib.pyplot as graficaActual
 from multiprocessing import Queue
 #from matplotlib.figure import Figure
-import matplotlib.pyplot as graficaActual
 from tarjetaadquisicion import TarjetaAdquisicion
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
+#from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+#from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 
 class miVentana(QtGui.QWidget):
     
@@ -86,18 +86,18 @@ class miVentana(QtGui.QWidget):
 
         # a figure instance to plot on
         #self.figure = Figure()
-        self.figure = graficaActual.figure(figsize = (15,5))
+        #self.figure = graficaActual.figure(figsize = (15,5))
 
         # this is the Canvas Widget that displays the `figure`
         # it takes the `figure` instance as a parameter to __init__
-        self.canvas = FigureCanvas(self.figure)
-        self.canvas.resize(500,800)
-        self.canvas.setMinimumWidth(500)
-        self.canvas.setMinimumHeight(350)
+        #self.canvas = FigureCanvas(self.figure)
+        #self.canvas.resize(500,800)
+        #self.canvas.setMinimumWidth(500)
+        #self.canvas.setMinimumHeight(350)
 
         # this is the Navigation widget
         # it takes the Canvas widget and a parent
-        self.toolbar = NavigationToolbar(self.canvas, self)
+        #self.toolbar = NavigationToolbar(self.canvas, self)
 
         ### CONTROL DE GRAFICA:
         self.miEtiquetaTiempo = QtGui.QLabel('Inicio: '+self.miTarjetaAdquisicion.horaInicioLiteral)
@@ -168,8 +168,8 @@ class miVentana(QtGui.QWidget):
 
         graficaV = QtGui.QVBoxLayout()
 
-        graficaV.addWidget(self.toolbar)
-        graficaV.addWidget(self.canvas)
+        #graficaV.addWidget(self.toolbar)
+        #graficaV.addWidget(self.canvas)
 
         layoutHorizontalPrincipal = QtGui.QHBoxLayout()
         #layoutHorizontalPrincipal.addStretch(1)
@@ -261,52 +261,8 @@ class miVentana(QtGui.QWidget):
         #print('Finalizando grafica desde adentro')
 
     def refrescarGrafica(self,argumentoOrdenada,argumentoAbsisa,listaDatos,guardarEnPDF = False):
-        if listaDatos == None:
-            #print('Nada que actualizar')
-            pass
-        else:
-            self.titulo = self.miDataMotor.text()
-            if argumentoOrdenada == 'Todos':
-                graficaActual.cla()
-                ax1 = self.figure.add_subplot(111)
-                t = listaDatos[0]#range(len(listaDatos[0]))
-                v = listaDatos[1]
-                c = listaDatos[2]
-                T = listaDatos[3]
-                r = listaDatos[4]
-                graficaActual.title(self.titulo)
-                graficaActual.ylabel('$[V] [A] [C] [rpm]$')
-                graficaActual.xlabel(self.miTarjetaAdquisicion.horaInicioLiteral+'+ $t [s]$')
-                graficaActual.grid()
-                graficaActual.plot(t,v,label='v')
-                graficaActual.plot(t,c,label='i')
-                graficaActual.plot(t,T,label='T')
-                graficaActual.plot(t,r,label='rpm')
-                #graficaActual.plot(t,v,'b.-',label='v',t,c,'y.-',label='i',t,T,'r.-',label='T',t,r,'g.-',label='rpm')
-                graficaActual.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),ncol=4, fancybox=True, shadow=True)
-                if guardarEnPDF:
-                    graficaActual.savefig(self.titulo+'_'+self.miTarjetaAdquisicion.fechaHora+'.pdf', bbox_inches='tight')
-                self.canvas.draw()
-                graficaActual.gcf().clear()
-            else:
-                graficaActual.cla()
-                ax1 = self.figure.add_subplot(111)
-                a = listaDatos[self.indices[argumentoAbsisa][0]]
-                o = listaDatos[self.indices[argumentoOrdenada][0]]
-                self.titulo += '_'+argumentoOrdenada +'_vs_'+ argumentoAbsisa
-                graficaActual.title(self.titulo)
-                if self.indices[argumentoAbsisa][0]==0:
-                    graficaActual.xlabel(self.miTarjetaAdquisicion.horaInicioLiteral+' + '+self.indices[argumentoAbsisa][1])
-                else:
-                    graficaActual.xlabel(self.indices[argumentoAbsisa][1])
-                
-                graficaActual.ylabel(self.indices[argumentoOrdenada][1])
-                graficaActual.grid()
-                graficaActual.plot(a,o)
-                if guardarEnPDF:
-                    graficaActual.savefig(self.titulo+'_'+self.miTarjetaAdquisicion.fechaHora+'.pdf', bbox_inches='tight')
-                self.canvas.draw()
-
+        pass
+         
         
 def main():
     app = QtGui.QApplication(sys.argv)
