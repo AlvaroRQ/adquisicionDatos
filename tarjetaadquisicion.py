@@ -13,6 +13,9 @@ class TarjetaAdquisicion():
 		self.miNombrePuerto = '/dev/ttyAMA0'
 		self.miPuerto = serial.Serial()
 		self.miPuerto.baudrate = baudrate
+		self.miPuerto.parity = serial.PARITY_NONE
+		self.miPuerto.stopbits = serial.STOPBITS_ONE
+		self.miPuerto.bytesize = serial.EIGHTBITS
 		self.miPuerto.timeout = 10
 		self.miPuerto.port = self.miNombrePuerto
 		self.miPuerto.open()
