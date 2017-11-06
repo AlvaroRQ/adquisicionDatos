@@ -1,0 +1,69 @@
+\documentclass[12pt]{article}
+
+\usepackage{anysize}
+\usepackage{listings}
+\marginsize{2.5cm}{2.5cm}{1.5cm}{2.5cm}
+
+\usepackage{wrapfig}
+\usepackage{graphicx} 
+
+\usepackage{fancyhdr}
+
+\usepackage{hyperref}
+
+
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+
+\title{Postulación 500 Latam}
+\author{Álvaro Rubén Hurtado Maldonado}
+
+\pagestyle{fancy}
+
+%\lhead[x1]{\includegraphics[width=1.5cm,natwidth=251]{logo.png} }
+\renewcommand{\headrulewidth}{1.5pt}
+
+\rfoot{Deep Micro Systems}
+\renewcommand{\footrulewidth}{1.5pt}
+
+\pagestyle{fancy} 
+
+\begin{document}
+
+
+\setlength{\unitlength}{1 cm} %Especificar unidad de trabajo
+\thispagestyle{empty}
+\begin{picture}(18,4)
+%\put(5.75,0){\includegraphics[width=5cm,natwidth=251]{logo.png}}
+
+\end{picture}
+\\
+\\
+\begin{center}
+\textbf{\Huge Deep Micro Systems\\ Smart Camera}\\[1.0cm]
+
+{\Large Clasificado}\\[1.8cm]
+{\Large{ \textbf{DESCRIPCIÓN DE FUNCIONAMIENTO DETALLADO, INFRACTOR AUTOMÁTICO}}}\\[3.5cm]
+{\Large Álvaro Rubén Hurtado Maldonado}\\[1cm]
+
+Oruro - \today
+\end{center}
+
+\pagebreak
+
+\tableofcontents
+\pagebreak
+	
+\section{Company info}
+
+	\subsection{Paquetes requeridos}
+
+
+	\begin{lstlisting}[language=bash]
+		sudo apt-get install python3-pyqt4
+		sudo apt-get install python3-matplotlib
+		sudo apt-get install python3-serial
+		sudo chmod 777 /dev/ttyACM0
+	\end{lstlisting}
+	
+\end{document}

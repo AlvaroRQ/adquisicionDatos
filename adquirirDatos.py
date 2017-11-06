@@ -67,8 +67,8 @@ class miVentana(QtGui.QWidget):
         self.botonDeCancel.setEnabled(False)
         self.botonDeInicio.resize(100,100)
         self.botonDeCancel.resize(100,100)
-        self.botonDeInicio.setMinimumHeight(80)
-        self.botonDeCancel.setMinimumHeight(80)
+        #self.botonDeInicio.setMinimumHeight(60)
+        #self.botonDeCancel.setMinimumHeight(60)
 
         self.barraControlPrograma = QtGui.QHBoxLayout()
         self.barraControlPrograma.addWidget(self.botonDeInicio)
@@ -92,8 +92,8 @@ class miVentana(QtGui.QWidget):
         # it takes the `figure` instance as a parameter to __init__
         self.canvas = FigureCanvas(self.figure)
         self.canvas.resize(500,800)
-        self.canvas.setMinimumWidth(600)
-        self.canvas.setMinimumHeight(300)
+        self.canvas.setMinimumWidth(500)
+        self.canvas.setMinimumHeight(350)
 
         # this is the Navigation widget
         # it takes the Canvas widget and a parent
@@ -129,7 +129,8 @@ class miVentana(QtGui.QWidget):
         ## SECCION COMENTARIOS:
         self.miTituloComentarios = QtGui.QLabel('Comentarios:')
         self.miComentario = QtGui.QTextEdit()
-        self.miComentario.setMinimumHeight(100)
+        self.miComentario.setMaximumHeight(80)
+
 
         ## Control de puerto
         self.miEtiquetaPuerto = QtGui.QLabel('Conectar a:')
@@ -174,7 +175,7 @@ class miVentana(QtGui.QWidget):
         #layoutHorizontalPrincipal.addStretch(1)
         layoutHorizontalPrincipal.addLayout(capaVerticalAuxiliar)
         layoutHorizontalPrincipal.addLayout(graficaV)
-        self.setMinimumHeight(500)
+        self.setMinimumHeight(450)
         
         self.setLayout(layoutHorizontalPrincipal)    
         
