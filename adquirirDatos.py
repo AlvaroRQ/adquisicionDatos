@@ -92,7 +92,8 @@ class miVentana(QtGui.QWidget):
         # it takes the `figure` instance as a parameter to __init__
         self.canvas = FigureCanvas(self.figure)
         self.canvas.resize(500,800)
-        self.canvas.setMinimumWidth(500)
+        self.canvas.setMinimumWidth(450)
+        self.canvas.setMaximumWidth(500)
         self.canvas.setMinimumHeight(350)
 
         # this is the Navigation widget
@@ -100,8 +101,7 @@ class miVentana(QtGui.QWidget):
         self.toolbar = NavigationToolbar(self.canvas, self)
 
         ### CONTROL DE GRAFICA:
-        self.miEtiquetaTiempo = QtGui.QLabel('Inicio: '+self.miTarjetaAdquisicion.horaInicioLiteral)
-        self.miTituloControlGrafica = QtGui.QLabel('Graficar:')
+        self.miTituloControlGrafica = QtGui.QLabel('Graficar: (Inicio: '+self.miTarjetaAdquisicion.horaInicioLiteral+')')
         self.miLegendaVS = QtGui.QLabel('vs')
 
         self.seleccionDeOrdenada = QtGui.QComboBox(self)
@@ -129,7 +129,7 @@ class miVentana(QtGui.QWidget):
         ## SECCION COMENTARIOS:
         self.miTituloComentarios = QtGui.QLabel('Comentarios:')
         self.miComentario = QtGui.QTextEdit()
-        self.miComentario.setMaximumHeight(80)
+        self.miComentario.setMinimumHeight(50)
 
 
         ## Control de puerto
@@ -157,7 +157,6 @@ class miVentana(QtGui.QWidget):
         capaVerticalAuxiliar.addLayout(self.parametrosDePlaca1)
         capaVerticalAuxiliar.addLayout(self.parametrosDePlaca2)
         capaVerticalAuxiliar.addLayout(self.parametrosDePlaca3)
-        capaVerticalAuxiliar.addWidget(self.miEtiquetaTiempo)
         capaVerticalAuxiliar.addWidget(self.miTituloControlGrafica)
         capaVerticalAuxiliar.addLayout(self.barraControlGrafica)
         capaVerticalAuxiliar.addWidget(self.miTituloComentarios)
@@ -175,7 +174,7 @@ class miVentana(QtGui.QWidget):
         #layoutHorizontalPrincipal.addStretch(1)
         layoutHorizontalPrincipal.addLayout(capaVerticalAuxiliar)
         layoutHorizontalPrincipal.addLayout(graficaV)
-        self.setMinimumHeight(450)
+        self.setMinimumHeight(430)
         
         self.setLayout(layoutHorizontalPrincipal)    
         
@@ -225,7 +224,7 @@ class miVentana(QtGui.QWidget):
     def importarDatos(self):
         self.estadoAuxiliar = True
         self.miTarjetaAdquisicion.recibirInformacion()
-        self.miEtiquetaTiempo.setText('Inicio Grafica: '+self.miTarjetaAdquisicion.horaInicioLiteral)
+        self.miTituloControlGrafica.setText('Graficar : Inicio ('+self.miTarjetaAdquisicion.horaInicioLiteral+')')
         self.botonDeCancel.setEnabled(True)
         self.botonDeInicio.setEnabled(False)
         self.miTareaGraficaParalela = threading.Thread(target=self.actualizacionAutomaticaGrafica, args=("task",))
