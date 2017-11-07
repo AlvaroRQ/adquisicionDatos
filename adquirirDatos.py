@@ -180,7 +180,10 @@ class miVentana(QtGui.QWidget):
         self.setGeometry(300, 300, 300, 150)
         self.setWindowTitle('Adquisición de datos de Motor DC')   
         self.setWindowIcon(QtGui.QIcon('./pictures/logo.png')) 
-        QtGui.QApplication.setStyle(QtGui.QStyleFactory.create(sys.argv[1]))
+        try:
+            QtGui.QApplication.setStyle(QtGui.QStyleFactory.create(sys.argv[1]))
+        except:
+            QtGui.QApplication.setStyle(QtGui.QStyleFactory.create('Cleanlooks'))
         self.show()
 
     def closeApplication(self):
