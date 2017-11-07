@@ -129,8 +129,7 @@ class miVentana(QtGui.QWidget):
         ## SECCION COMENTARIOS:
         self.miTituloComentarios = QtGui.QLabel('Comentarios:')
         self.miComentario = QtGui.QTextEdit()
-        self.miComentario.setMinimumHeight(50)
-
+        #self.miComentario.setMinimumHeight(50)
 
         ## Control de puerto
         self.miEtiquetaPuerto = QtGui.QLabel('Conectar a:')
@@ -181,6 +180,7 @@ class miVentana(QtGui.QWidget):
         self.setGeometry(300, 300, 300, 150)
         self.setWindowTitle('Adquisición de datos de Motor DC')   
         self.setWindowIcon(QtGui.QIcon('./pictures/logo.png')) 
+        QtGui.QApplication.setStyle(QtGui.QStyleFactory.create(sys.argv[1]))
         self.show()
 
     def closeApplication(self):
